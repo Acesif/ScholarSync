@@ -22,8 +22,8 @@ public class ReadingList extends BaseEntity {
 
     @ManyToMany(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
     @JoinTable(
-            joinColumns = @JoinColumn(name = "paper_id"),
-            inverseJoinColumns = @JoinColumn(name = "list_id")
+            joinColumns = @JoinColumn(name = "reading_list_id"),
+            inverseJoinColumns = @JoinColumn(name = "research_paper_id")
     )
     private List<ResearchPaper> researchPapers;
 }

@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -14,10 +16,12 @@ public abstract class BaseController<T extends BaseEntity> {
 
     protected final BaseService<T> service;
 
-    public T findById(Long id) {
+    @GetMapping("/{id}")
+    public T findById(@PathVariable Long id) {
         return service.findById(id);
     }
 
+    @GetMapping("all")
     public List<T> findAll() {
         return service.findAll();
     }
