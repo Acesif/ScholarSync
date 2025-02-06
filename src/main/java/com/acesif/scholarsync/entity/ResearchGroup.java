@@ -26,8 +26,8 @@ public class Group extends BaseEntity {
     @JoinTable(
             name = "group_members",
             joinColumns = @JoinColumn(name = "group_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
+            inverseJoinColumns = @JoinColumn(name = "researcher_id")
     )
 
-    private List<User> members;
+    private List<Researcher> members;
 }
