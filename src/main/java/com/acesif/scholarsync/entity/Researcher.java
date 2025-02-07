@@ -3,25 +3,24 @@ package com.acesif.scholarsync.entity;
 import com.acesif.scholarsync.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
-@Entity
-@Table(
-        name = "user",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = "username"),
-                @UniqueConstraint(columnNames = "email")
-        }
-)
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@Builder
-public class User extends BaseEntity {
+@SuperBuilder
+@Entity
+@Table(name = "researcher",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_researcher_username", columnNames = "username"),
+                @UniqueConstraint(name = "uk_researcher_email", columnNames = "email")
+        })
+public class Researcher extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -29,12 +28,12 @@ public class User extends BaseEntity {
 
     private String affiliation;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String researchInterests;
 
-    @OneToMany(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
-    @JoinColumn(name = "reading_list_id")
+    @OneToMany(mappedBy = "researcher", cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
+    @Column(nullable = false)
     private List<ReadingList> readingList;
 }

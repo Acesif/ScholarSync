@@ -3,14 +3,29 @@ spring:
     name: Scholar Sync
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/scholarsync
-    username: postgres
+    url: jdbc:postgresql://74.176.193.154:5432/scholarsync
+    username: ssync
     password: root
+    hikari:
+      max-lifetime: 1800000  # 30 minutes
+      idle-timeout: 600000   # 10 minutes
+
   jpa:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
 server:
   port: 8080
   servlet:
     context-path: /ssync
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    disable-swagger-default-url: true

@@ -4,10 +4,16 @@ import com.acesif.scholarsync.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.*;
 
 @Entity
-@Table(name = "research_paper")
+@Table(
+        name = "research_paper",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_doi", columnNames = "doi")
+        }
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

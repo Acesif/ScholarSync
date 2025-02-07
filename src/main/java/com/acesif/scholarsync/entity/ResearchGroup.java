@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class Group extends BaseEntity {
+public class ResearchGroup extends BaseEntity {
 
     @Column(nullable = false)
     private String groupName;

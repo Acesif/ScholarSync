@@ -2,6 +2,8 @@ package com.acesif.scholarsync.base;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,20 +22,20 @@ public abstract class BaseService<T extends BaseEntity> {
     public T findById(Long id) {
         T entity = baseRepository.findById(id).orElse(null);
         if (entity == null) {
-            log.warn("Could not find entity with id {}", id);
+            log.warn("Method: findById, message: Could not find entity with id {}", id);
             return null;
         }
-        log.info("Found entity with id {}", id);
+        log.info("Method: findById, message: Found entity with id {}", id);
         return entity;
     }
 
     public List<T> findAll() {
         List<T> entityList = baseRepository.findAllByFlagIsTrue();
         if (entityList.isEmpty()) {
-            log.warn("Could not find any entity");
+            log.warn("Method: findAll, Message: Could not find any entity");
             return null;
         }
-        log.info("Found list of entities");
+        log.info("Method: findAll, message: Found list of entities");
         return entityList;
     }
 
@@ -51,17 +53,18 @@ public abstract class BaseService<T extends BaseEntity> {
         entity.setCreatedAt(new Date());
         entity.setFlag(true);
         entity.setUpdatedAt(new Date());
-        log.info("Saving entity {}", entity);
+        log.info("Method: save, message: Saving entity {}", entity);
         return baseRepository.saveAndFlush(entity);
     }
 
     public T update(T entity) {
         if (entity.getId() == null || findById(entity.getId()) == null) {
-            log.warn("Could not update entity with id {}, entity does not exist", entity.getId());
+            log.warn("Method: update, message: Could not update entity with id {}, entity does not exist", entity.getId());
             return null;
         }
         entity.setUpdatedAt(new Date());
-        log.info("Updating entity with id {}", entity.getId());
+        entity.setFlag(entity.isFlag());
+        log.info("Method: update, message: Updating entity with id {}", entity.getId());
         return baseRepository.save(entity);
     }
 
@@ -70,23 +73,23 @@ public abstract class BaseService<T extends BaseEntity> {
         if (entity != null) {
             entity.setFlag(false);
             entity.setUpdatedAt(new Date());
-            log.info("Deleting entity with id {}", id);
+            log.info("Method: delete, message: Deleting entity with id {}", id);
             return update(entity);
         }
         return null;
     }
 
     public void hardDelete(Long id) {
-        log.info("Purging entity with id {}", id);
+        log.info("Method: hardDelete, message: Purging entity with id {}", id);
         baseRepository.deleteById(id);
     }
 
     private Page<T> getPages(Page<T> entityPage, int page, int size) {
         if (entityPage.hasContent()) {
-            log.info("Found entities with page {} and size {}", page, size);
+            log.info("Method: getPages, message: Found entities with page {} and size {}", page, size);
             return entityPage;
         } else {
-            log.warn("Could not find any entities");
+            log.warn("Method: getPages, message: Could not find any entities");
             return null;
         }
     }

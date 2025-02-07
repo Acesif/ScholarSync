@@ -1,6 +1,7 @@
 package com.acesif.scholarsync.base;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,14 +32,17 @@ public abstract class BaseEntity implements Serializable {
     protected Long id;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Dhaka")
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     @CreationTimestamp
+    @JsonIgnore
     protected Date createdAt;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "Asia/Dhaka")
     @UpdateTimestamp
+    @JsonIgnore
     protected Date updatedAt;
 
     @Column(nullable = false, columnDefinition = "boolean default true")
+    @JsonIgnore
     protected boolean flag;
 }
