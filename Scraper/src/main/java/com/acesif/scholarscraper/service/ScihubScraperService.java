@@ -35,7 +35,7 @@ public class ScihubScraperService {
                 String actualPdfUrl = fetchPdfUrl(pdfUrl, userAgent);
 
                 if (actualPdfUrl != null) {
-                    if (!actualPdfUrl.startsWith("http")){
+                    if (!actualPdfUrl.startsWith("http")) {
                         actualPdfUrl = baseUrl + actualPdfUrl;
                     }
                     log.info("Found PDF URL: {}", actualPdfUrl);
@@ -46,6 +46,14 @@ public class ScihubScraperService {
 
             } catch (IOException e) {
                 log.error("Failed to fetch from: {} - Trying next mirror...", baseUrl, e);
+            }
+
+            try {
+                log.info("Waiting 5 seconds before trying next Sci-Hub mirror...");
+                Thread.sleep(10000);
+            } catch (InterruptedException ie) {
+                log.warn("Sleep interrupted: {}", ie.getMessage());
+                Thread.currentThread().interrupt();
             }
         }
 

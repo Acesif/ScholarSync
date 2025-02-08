@@ -58,7 +58,7 @@ public class GoogleScholarScraperService {
                         String citations = citationsElement != null ? citationsElement.text() : "No citations info available";
                         int citationCount = extractCitations(citations);
                         int year = extractYear(authorInfo);
-                        String doi = getDOIFromTitle(title);
+                        String doi = extractDOIFromURL(link);
 
                         log.debug("Processing article: {}", title);
 
@@ -67,7 +67,7 @@ public class GoogleScholarScraperService {
                                         .id(id++)
                                         .title(title)
                                         .link(link)
-                                        .doi(doi)
+                                        .doi(doi == null ? getDOIFromTitleOrLink(title, link) : doi)
                                         .authors(authorInfo)
                                         .year(year)
                                         .snippet(snippet)
@@ -89,7 +89,7 @@ public class GoogleScholarScraperService {
         return results;
     }
 
-    public String getDOIFromTitle(String title) {
+    public String getDOIFromTitleOrLink(String title, String link) {
         try {
             String url = CROSSREF_UNIFIED_RESOURCE_API + "?query.title=" + title.replace(" ", "+");
             log.debug("Fetching DOI for title: '{}'", title);
@@ -107,18 +107,70 @@ public class GoogleScholarScraperService {
 
             if (!items.isEmpty()) {
                 JSONObject firstItem = items.getJSONObject(0);
-                String doi = firstItem.optString("DOI", "No DOI found");
-                log.info("Found DOI: {}", doi);
-                return doi;
-            } else {
-                log.warn("No DOI found for title: '{}'", title);
-                return "No DOI found";
+                String doi = firstItem.optString("DOI", null);
+                if (doi != null) {
+                    log.info("Found DOI via CrossRef API: {}", doi);
+                    return doi;
+                }
+            }
+        } catch (IOException e) {
+            log.error("Error fetching DOI for title '{}' from CrossRef: {}", title, e.getMessage(), e);
+            String scrapedDOI = scrapeDOIFromPage(link);
+
+            if (scrapedDOI != null) {
+                log.info("Found DOI via page scraping: {}", scrapedDOI);
+                return scrapedDOI;
+            }
+        }
+        return "DOI not found";
+    }
+
+    private String scrapeDOIFromPage(String link) {
+        try {
+            Document doc = Jsoup.connect(link)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                    .timeout(5000)
+                    .get();
+
+            Elements links = doc.select("a[href*='doi.org']");
+            for (Element element : links) {
+                String href = element.attr("href");
+                log.debug("Potential DOI link found in href: {}", href);
+
+                String doi = extractDOIFromURL(href);
+                if (doi != null) {
+                    return doi;
+                }
             }
 
+            Elements allElements = doc.getAllElements();
+            for (Element element : allElements) {
+                String text = element.text();
+                if (text.contains("doi.org")) {
+                    log.debug("Potential DOI found in text: {}", text);
+
+                    String doi = extractDOIFromURL(text);
+                    if (doi != null) {
+                        return doi;
+                    }
+                }
+            }
+
+            Elements metaTags = doc.select("meta[content*='doi.org']");
+            for (Element meta : metaTags) {
+                String content = meta.attr("content");
+                log.debug("Potential DOI found in meta tag: {}", content);
+
+                String doi = extractDOIFromURL(content);
+                if (doi != null) {
+                    return doi;
+                }
+            }
+            log.warn("No DOI found in the provided link: {}", link);
         } catch (IOException e) {
-            log.error("Error fetching DOI for title '{}': {}", title, e.getMessage(), e);
-            return "Error fetching DOI";
+            log.error("Error scraping DOI from link '{}': {}", link, e.getMessage(), e);
         }
+        return null;
     }
 
     private int extractCitations(String text) {
@@ -147,6 +199,12 @@ public class GoogleScholarScraperService {
 
         log.warn("No valid year found in text: {}", text);
         return -1;
+    }
+
+    private String extractDOIFromURL(String link) {
+        Pattern doiPattern = Pattern.compile("10\\.\\d{4,9}/[-._;()/:a-zA-Z0-9]+");
+        Matcher matcher = doiPattern.matcher(link);
+        return matcher.find() ? matcher.group() : null;
     }
 
 }

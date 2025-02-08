@@ -43,52 +43,76 @@ public class PDFDownloaderUtils {
     }
 
     public static Response getTitleAndLinkFromDOI(String doi) {
-        try {
-            String url = CROSSREF_UNIFIED_RESOURCE_API + "/" + doi;
-            log.debug("Fetching title and link for DOI: '{}'", doi);
-            log.debug("CrossRef API URL: {}", url);
+        int maxRetries = 5;
+        int attempt = 0;
+        int delay = 2000;
 
-            Document doc = Jsoup.connect(url)
-                    .ignoreContentType(true)
-                    .timeout(5000)
-                    .get();
+        while (true) {
+            try {
+                String url = CROSSREF_UNIFIED_RESOURCE_API + "/" + doi;
+                log.debug("Attempt {} - Fetching title and link for DOI: '{}'", (attempt + 1), doi);
+                log.debug("CrossRef API URL: {}", url);
 
-            JSONObject jsonResponse = new JSONObject(doc.text());
-            log.debug("Received response from CrossRef API: {}", jsonResponse);
+                Document doc = Jsoup.connect(url)
+                        .ignoreContentType(true)
+                        .timeout(5000)  // Timeout per request
+                        .get();
 
-            JSONObject message = jsonResponse.getJSONObject("message");
+                JSONObject jsonResponse = new JSONObject(doc.text());
+                log.debug("Received response from CrossRef API: {}", jsonResponse);
 
-            JSONArray titleArray = message.optJSONArray("title");
-            String title = (titleArray != null && !titleArray.isEmpty()) ? titleArray.getString(0) : "No title found";
+                JSONObject message = jsonResponse.getJSONObject("message");
 
-            String link = null;
-            JSONArray linkArray = message.optJSONArray("link");
-            if (linkArray != null && !linkArray.isEmpty()) {
-                link = linkArray.getJSONObject(0).optString("URL", null);
-            }
+                JSONArray titleArray = message.optJSONArray("title");
+                String title = (titleArray != null && !titleArray.isEmpty()) ? titleArray.getString(0) : "No title found";
 
-            if (link == null) {
-                JSONObject resource = message.optJSONObject("resource");
-                if (resource != null) {
-                    JSONObject primary = resource.optJSONObject("primary");
-                    if (primary != null) {
-                        link = primary.optString("URL", null);
+                String link = null;
+                JSONArray linkArray = message.optJSONArray("link");
+                if (linkArray != null && !linkArray.isEmpty()) {
+                    link = linkArray.getJSONObject(0).optString("URL", null);
+                }
+
+                if (link == null) {
+                    JSONObject resource = message.optJSONObject("resource");
+                    if (resource != null) {
+                        JSONObject primary = resource.optJSONObject("primary");
+                        if (primary != null) {
+                            link = primary.optString("URL", null);
+                        }
                     }
                 }
+
+                Response response = Response.builder()
+                        .title(title)
+                        .link(link)
+                        .build();
+
+                log.info("Found title for DOI '{}': {}, Link: {}", doi, title, link);
+                return response;
+
+            } catch (IOException e) {
+                attempt++;
+                log.error("Attempt {} failed for DOI '{}': {}", attempt, doi, e.getMessage());
+
+                if (attempt >= maxRetries) {
+                    log.error("Max retries reached. Giving up on DOI '{}'", doi);
+                    return null;
+                }
+
+                try {
+                    log.info("Retrying in {} ms...", delay);
+                    Thread.sleep(delay);
+                    delay *= 2;
+                } catch (InterruptedException ie) {
+                    log.warn("Retry sleep interrupted: {}", ie.getMessage());
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
-
-            Response response = Response.builder()
-                    .title(title)
-                    .link(link)
-                    .build();
-
-            log.info("Found title for DOI '{}': {}, Link: {}", doi, title, link);
-            return response;
-
-        } catch (IOException e) {
-            log.error("Error fetching title and link for DOI '{}': {}", doi, e.getMessage(), e);
-            return null;
         }
+
+        log.warn("Failed to retrieve title and link for DOI '{}' after {} attempts", doi, maxRetries);
+        return null;
     }
 
     public static ResponseEntity<Resource> downloadPdfFromUrl(String title, String pdfUrl) {
