@@ -23,7 +23,7 @@ public class GoogleScholarController {
         return scraperService.searchScholar(request.getQuery(), request.getLimit());
     }
 
-    @GetMapping("/pdf")
+    @PostMapping("/pdf")
     public ResponseEntity<? extends Resource> downloadPaper(
             @RequestParam String doi
     ) {

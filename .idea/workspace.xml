@@ -14,7 +14,11 @@
     </loaded-modules>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="33295656-9d7b-461e-8240-64dbb4ac4c36" name="Changes" comment="" />
+    <list default="true" id="33295656-9d7b-461e-8240-64dbb4ac4c36" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScholarScraper/src/main/java/com/acesif/scholarscraper/controller/GoogleScholarController.java" beforeDir="false" afterPath="$PROJECT_DIR$/ScholarScraper/src/main/java/com/acesif/scholarscraper/controller/GoogleScholarController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScholarScraper/src/main/java/com/acesif/scholarscraper/service/GoogleScholarScraperService.java" beforeDir="false" afterPath="$PROJECT_DIR$/ScholarScraper/src/main/java/com/acesif/scholarscraper/service/GoogleScholarScraperService.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -81,37 +85,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle.Build ScholarScraper.executor": "Run",
-    "Gradle.Build ScholarSyncCore.executor": "Run",
-    "Gradle.Build Scholar_Sync.executor": "Run",
-    "Gradle.Scholar_Sync [clean].executor": "Run",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "Spring Boot.ScholarScraper.executor": "Run",
-    "Spring Boot.ScholarSyncApplication.executor": "Run",
-    "Spring Boot.ScholarSyncCore.executor": "Run",
-    "Spring Boot.Scholar_Sync.executor": "Run",
-    "git-widget-placeholder": "main",
-    "jdk.selected.JAVA_MODULE": "openjdk-23",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/mnt/Two/Code/ScholarSync/ScholarSyncCore",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.Build ScholarScraper.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Build ScholarSyncCore.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Build Scholar_Sync.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Scholar_Sync [clean].executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;Spring Boot.ScholarScraper.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ScholarSyncApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ScholarSyncCore.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.Scholar_Sync.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;openjdk-23&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/mnt/Two/Code/ScholarSync/ScholarSyncCore&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/main/java/com/acesif/scholarsync/dto/response" />
@@ -205,7 +209,9 @@
       <workItem from="1738862681637" duration="27076000" />
       <workItem from="1738954019554" duration="277000" />
       <workItem from="1738954306726" duration="117000" />
-      <workItem from="1738954430809" duration="9423000" />
+      <workItem from="1738954430809" duration="9765000" />
+      <workItem from="1738994639760" duration="3477000" />
+      <workItem from="1739001900008" duration="3512000" />
     </task>
     <servers />
   </component>

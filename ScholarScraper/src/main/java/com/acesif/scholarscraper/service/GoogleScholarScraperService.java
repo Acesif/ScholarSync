@@ -1,6 +1,7 @@
 package com.acesif.scholarscraper.service;
 
 import com.acesif.scholarscraper.dto.Response;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -17,23 +18,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 public class GoogleScholarScraperService {
 
-    private static final String GOOGLE_SCHOLAR_SEARCH_URL = "https://scholar.google.com/scholar?";
+    private static final String GOOGLE_SCHOLAR_SEARCH_URL = "https://scholar.google.com/scholar";
     private static final String CROSSREF_UNIFIED_RESOURCE_API = "https://api.crossref.org/works";
-    private static final String SCI_HUB_URL = "https://sci-hub.se/";
+    private static final String[] SCI_HUB_MIRRORS = {
+            "https://sci-hub.se/",
+            "http://sci-hub.kr/",
+            "https://sci-hub.st/",
+            "https://sci-hub.tw/",
+            "http://sci-hub.st/",
+            "http://sci-hub.tw/"
+    };
 
     public List<Response> searchScholar(String query, long limit) {
         long id = 1L;
         long current = 0L;
         List<Response> results = new ArrayList<>();
+
+        log.info("Starting Google Scholar search for query: '{}', limit: {}", query, limit);
+
         while (current < limit) {
             try {
-                String url = GOOGLE_SCHOLAR_SEARCH_URL + "start="+current+"&q=" + query.replace(" ", "+");
+                String url = GOOGLE_SCHOLAR_SEARCH_URL + "?start=" + current + "&q=" + query.replace(" ", "+");
+                log.debug("Fetching URL: {}", url);
 
                 Document doc = Jsoup.connect(url)
                         .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
@@ -41,6 +55,7 @@ public class GoogleScholarScraperService {
                         .get();
 
                 Elements elements = doc.select(".gs_ri");
+                log.info("Fetched {} results from Google Scholar for page starting at {}", elements.size(), current);
 
                 for (Element element : elements) {
                     Element titleElement = element.selectFirst(".gs_rt a");
@@ -58,6 +73,8 @@ public class GoogleScholarScraperService {
                         int year = extractYear(authorInfo);
                         String doi = getDOIFromTitle(title);
 
+                        log.debug("Processing article: {}", title);
+
                         results.add(
                                 Response.builder()
                                         .id(id++)
@@ -70,20 +87,26 @@ public class GoogleScholarScraperService {
                                         .citations(citationCount)
                                         .build()
                         );
+                    } else {
+                        log.warn("Skipped an entry due to missing title element.");
                     }
                 }
 
             } catch (IOException e) {
-                e.fillInStackTrace();
+                log.error("Failed to fetch Google Scholar results at start index {}: {}", current, e.getMessage(), e);
             }
             current += 10L;
         }
+
+        log.info("Search completed. Retrieved {} articles.", results.size());
         return results;
     }
 
     public String getDOIFromTitle(String title) {
         try {
             String url = CROSSREF_UNIFIED_RESOURCE_API + "?query.title=" + title.replace(" ", "+");
+            log.debug("Fetching DOI for title: '{}'", title);
+            log.debug("CrossRef API URL: {}", url);
 
             Document doc = Jsoup.connect(url)
                     .ignoreContentType(true)
@@ -91,19 +114,22 @@ public class GoogleScholarScraperService {
                     .get();
 
             JSONObject jsonResponse = new JSONObject(doc.text());
+            log.debug("Received response from CrossRef API: {}", jsonResponse);
 
             JSONArray items = jsonResponse.getJSONObject("message").getJSONArray("items");
 
             if (!items.isEmpty()) {
                 JSONObject firstItem = items.getJSONObject(0);
-
-                return firstItem.optString("DOI", "No DOI found");
+                String doi = firstItem.optString("DOI", "No DOI found");
+                log.info("Found DOI: {}", doi);
+                return doi;
             } else {
+                log.warn("No DOI found for title: '{}'", title);
                 return "No DOI found";
             }
 
         } catch (IOException e) {
-            e.fillInStackTrace();
+            log.error("Error fetching DOI for title '{}': {}", title, e.getMessage(), e);
             return "Error fetching DOI";
         }
     }
@@ -111,6 +137,8 @@ public class GoogleScholarScraperService {
     public String getTitleFromDOI(String doi) {
         try {
             String url = CROSSREF_UNIFIED_RESOURCE_API + "/" + doi;
+            log.debug("Fetching title for DOI: '{}'", doi);
+            log.debug("CrossRef API URL: {}", url);
 
             Document doc = Jsoup.connect(url)
                     .ignoreContentType(true)
@@ -118,70 +146,109 @@ public class GoogleScholarScraperService {
                     .get();
 
             JSONObject jsonResponse = new JSONObject(doc.text());
+            log.debug("Received response from CrossRef API: {}", jsonResponse);
 
             JSONObject message = jsonResponse.getJSONObject("message");
-
             JSONArray titleArray = message.optJSONArray("title");
 
             if (titleArray != null && !titleArray.isEmpty()) {
-                return titleArray.getString(0);
+                String title = titleArray.getString(0);
+                log.info("Found title for DOI '{}': {}", doi, title);
+                return title;
             } else {
+                log.warn("No title found for DOI: '{}'", doi);
                 return "No title found";
             }
 
         } catch (IOException e) {
-            e.fillInStackTrace();
+            log.error("Error fetching title for DOI '{}': {}", doi, e.getMessage(), e);
             return "Error fetching title";
         }
     }
 
     public ResponseEntity<Resource> getPdfByDOI(String title, String doi) {
-        try {
-            String pdfUrl = SCI_HUB_URL + doi;
-            title = title.replace(" ", "_");
+        title = title.replace(" ", "_");
 
-            Document doc = Jsoup.connect(pdfUrl)
-                    .userAgent("Mozilla/5.0")
-                    .timeout(5000)
-                    .get();
+        String[] userAgents = {
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+                "Mozilla/5.0 (Linux; Android 10)",
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)"
+        };
 
-            Element embedElement = doc.selectFirst("embed[type='application/pdf']");
-            String actualPdfUrl = (embedElement != null) ? embedElement.attr("src") : null;
+        Random random = new Random();
+        String userAgent = userAgents[random.nextInt(userAgents.length)];
 
-            if (actualPdfUrl == null) {
-                Element buttonElement = doc.selectFirst("button[onclick]");
-                if (buttonElement != null) {
-                    String onclickText = buttonElement.attr("onclick");
-                    actualPdfUrl = extractUrlFromOnclick(onclickText);
+        log.info("Attempting to fetch PDF for DOI: '{}'", doi);
+        log.debug("Generated user agent: {}", userAgent);
+
+        for (String baseUrl : SCI_HUB_MIRRORS) {
+            try {
+                String pdfUrl = baseUrl + doi;
+                log.debug("Trying Sci-Hub mirror: {}", pdfUrl);
+
+                String actualPdfUrl = fetchPdfUrl(pdfUrl, userAgent);
+
+                if (actualPdfUrl != null) {
+                    if (!actualPdfUrl.startsWith("http")){
+                        actualPdfUrl = baseUrl + actualPdfUrl;
+                    }
+                    log.info("Found PDF URL: {}", actualPdfUrl);
+                    return downloadPdfFromUrl(title, actualPdfUrl);
+                } else {
+                    log.warn("No PDF found at: {}", baseUrl);
                 }
+
+            } catch (IOException e) {
+                log.error("Failed to fetch from: {} - Trying next mirror...", baseUrl, e);
             }
-
-            if (actualPdfUrl == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ByteArrayResource("PDF not found on Sci-Hub".getBytes()));
-            }
-
-            if (actualPdfUrl.startsWith("//")) {
-                actualPdfUrl = "https:" + actualPdfUrl;
-            }
-
-            return downloadPdfFromUrl(title,actualPdfUrl);
-
-        } catch (IOException e) {
-            e.fillInStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ByteArrayResource("Error fetching PDF".getBytes()));
         }
+
+        log.warn("PDF not found on any Sci-Hub mirrors for DOI: '{}'", doi);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ByteArrayResource("PDF not found on any Sci-Hub mirrors".getBytes()));
+    }
+
+    private String fetchPdfUrl(String pdfUrl, String userAgent) throws IOException {
+        log.debug("Fetching PDF URL from: {}", pdfUrl);
+
+        Document doc = Jsoup.connect(pdfUrl)
+                .userAgent(userAgent)
+                .timeout(5000)
+                .get();
+
+        Element embedElement = doc.selectFirst("embed[type='application/pdf']");
+        String actualPdfUrl = (embedElement != null) ? embedElement.attr("src") : null;
+
+        if (actualPdfUrl == null) {
+            Element buttonElement = doc.selectFirst("button[onclick]");
+            if (buttonElement != null) {
+                String onclickText = buttonElement.attr("onclick");
+                actualPdfUrl = extractUrlFromOnclick(onclickText);
+            }
+        }
+
+        if (actualPdfUrl != null && actualPdfUrl.startsWith("//")) {
+            actualPdfUrl = "https:" + actualPdfUrl;
+        }
+
+        log.debug("Extracted actual PDF URL: {}", actualPdfUrl);
+        return actualPdfUrl;
     }
 
     private String extractUrlFromOnclick(String onclickText) {
+        log.debug("Extracting URL from onclick attribute: {}", onclickText);
         Pattern pattern = Pattern.compile("'(https?://[^']+)'");
         Matcher matcher = pattern.matcher(onclickText);
-        return matcher.find() ? matcher.group(1) : null;
+        String extractedUrl = matcher.find() ? matcher.group(1) : null;
+        log.debug("Extracted URL: {}", extractedUrl);
+        return extractedUrl;
     }
 
     private ResponseEntity<Resource> downloadPdfFromUrl(String title, String pdfUrl) {
         try {
+            log.info("Downloading PDF from: {}", pdfUrl);
+
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.set(HttpHeaders.USER_AGENT, "Mozilla/5.0");
@@ -191,15 +258,19 @@ public class GoogleScholarScraperService {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 ByteArrayResource resource = new ByteArrayResource(Objects.requireNonNull(response.getBody()));
+                log.info("Successfully downloaded PDF for: '{}'", title);
+
                 return ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename="+title+".pdf")
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + title + ".pdf")
                         .contentType(MediaType.APPLICATION_PDF)
                         .contentLength(response.getBody().length)
                         .body(resource);
+            } else {
+                log.warn("Failed to download PDF from: {}", pdfUrl);
             }
 
         } catch (Exception e) {
-            e.fillInStackTrace();
+            log.error("Error downloading PDF from '{}': {}", pdfUrl, e.getMessage(), e);
         }
 
         return ResponseEntity.badRequest().build();
@@ -210,8 +281,12 @@ public class GoogleScholarScraperService {
         Matcher matcher = pattern.matcher(text);
 
         if (matcher.find()) {
-            return Integer.parseInt(matcher.group());
+            int citationCount = Integer.parseInt(matcher.group());
+            log.debug("Extracted citation count: {}", citationCount);
+            return citationCount;
         }
+
+        log.warn("No citations found in text: {}", text);
         return 0;
     }
 
@@ -220,8 +295,12 @@ public class GoogleScholarScraperService {
         Matcher matcher = pattern.matcher(text);
 
         if (matcher.find()) {
-            return Integer.parseInt(matcher.group());
+            int year = Integer.parseInt(matcher.group());
+            log.debug("Extracted year: {}", year);
+            return year;
         }
+
+        log.warn("No valid year found in text: {}", text);
         return -1;
     }
 
