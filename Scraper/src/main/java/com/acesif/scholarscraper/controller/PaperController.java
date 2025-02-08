@@ -15,12 +15,12 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api")
-public class GoogleScholarController {
+public class PaperController {
 
     private final GoogleScholarScraperService scraperService;
     private final ScihubScraperService scihubScraperService;
 
-    public GoogleScholarController(GoogleScholarScraperService scraperService, ScihubScraperService scihubScraperService) {
+    public PaperController(GoogleScholarScraperService scraperService, ScihubScraperService scihubScraperService) {
         this.scraperService = scraperService;
         this.scihubScraperService = scihubScraperService;
     }
