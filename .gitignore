@@ -18,7 +18,7 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-.idea
+**/.idea
 *.iws
 *.iml
 *.ipr
@@ -33,5 +33,23 @@ out/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
-.vscode/
+# Node.js dependencies
+**/node_modules/
+**/npm-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+
+# Angular-specific
+**/.angular/
+**/.angular/cache/
+
+# Temporary files
+**/*.log
+**/dist/
+**/tmp/
+**/out-tsc/
+**/coverage/
+
