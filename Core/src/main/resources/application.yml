@@ -18,7 +18,7 @@ spring:
     hibernate:
       ddl-auto: update
 server:
-  port: 8080
+  port: 8070
   servlet:
     context-path: /ssync
 

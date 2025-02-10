@@ -10,7 +10,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(23)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
@@ -39,6 +39,12 @@ dependencies {
 	implementation 'com.microsoft.playwright:playwright:1.49.0'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+tasks.named('bootWar') {
+	archiveBaseName = 'scraper'
+	archiveVersion = ''
+	destinationDirectory = file("$rootDir/../bootWars")
+}
+
+tasks.named('war') {
+	enabled = false
 }

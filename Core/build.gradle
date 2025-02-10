@@ -10,7 +10,7 @@ version = '0.0.1'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -38,4 +38,14 @@ dependencies {
     implementation 'org.modelmapper:modelmapper:3.1.0'
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
     implementation 'org.glassfish.expressly:expressly:5.0.0'
+}
+
+tasks.named('bootWar') {
+    archiveBaseName = 'core'
+    archiveVersion = ''
+    destinationDirectory = file("$rootDir/../bootWars")
+}
+
+tasks.named('war') {
+    enabled = false
 }
