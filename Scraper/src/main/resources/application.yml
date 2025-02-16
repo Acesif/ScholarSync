@@ -6,3 +6,11 @@ server:
   port: 8090
   servlet:
     context-path: /scraper
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /
+    disable-swagger-default-url: true
